@@ -1,0 +1,121 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:system="clr-namespace:System;assembly=System.Runtime"
+        xmlns:generic="clr-namespace:System.Collections.Generic;assembly=System.Collections"
+        xmlns:converters="clr-namespace:DataGridStylingSample.Converters"
+        xmlns:viewModels="clr-namespace:DataGridStylingSample.ViewModels"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+        x:Class="DataGridStylingSample.Views.MainWindow"
+        Icon="/Assets/avalonia-logo.ico"
+		Width="500"
+		Height="400"
+        Title="TreeDataGridExpandBug">
+
+	<Window.Resources>
+        <system:Double x:Key="FontSizeH7">14</system:Double>
+		<SolidColorBrush x:Key="HoverBrush" Color="White" Opacity="0.2" />
+        <SolidColorBrush x:Key="SelectionBrush" Color="Gray" Opacity="0.7" />
+        <SolidColorBrush x:Key="SelectionIndicator" Color="Blue" Opacity="1" />
+    </Window.Resources>
+
+	<Window.Styles>
+
+        <Style Selector=":is(Control).h7">
+            <Setter Property="(TextBlock.FontSize)" Value="{StaticResource FontSizeH7}" />
+        </Style>
+
+        <Style Selector="TreeDataGrid">
+			<Setter Property="CanUserResizeColumns" Value="True" />
+		</Style>
+
+        <Style Selector="TreeDataGridRow">
+			<Setter Property="Focusable" Value="False" />
+			<Setter Property="Template">
+				<ControlTemplate>
+					<DockPanel LastChildFill="True">
+						<Border Name="PART_SelectionIndicator"
+								BorderThickness="2 0 0 0"
+								DockPanel.Dock="Left"
+								VerticalAlignment="Stretch" />
+						<Panel>
+							<Rectangle Name="PART_BackgroundRectangle" />
+							<TreeDataGridCellsPresenter Name="PART_CellsPresenter"
+														ElementFactory="{TemplateBinding ElementFactory}"
+														Items="{TemplateBinding Columns}"
+														Rows="{TemplateBinding Rows}" />
+							<Rectangle IsHitTestVisible="False" Name="PART_SelectionRectangle" />
+                            <Rectangle IsHitTestVisible="False" Name="PART_HoverRectangle" />
+						</Panel>
+					</DockPanel>
+				</ControlTemplate>
+			</Setter>
+		</Style>
+
+		<Style Selector="TreeDataGridRow:pointerover /template/ Rectangle#PART_HoverRectangle">
+			<Setter Property="Fill" Value="{DynamicResource HoverBrush}" />
+		</Style>
+		<Style Selector="TreeDataGridRow:selected /template/ Rectangle#PART_SelectionRectangle">
+			<Setter Property="Fill" Value="{DynamicResource SelectionBrush}" />
+		</Style>
+
+		<Style Selector="TreeDataGridRow:selected /template/ Border#PART_SelectionIndicator">
+			<Setter Property="BorderBrush" Value="{DynamicResource SelectionIndicator}" />
+		</Style>
+
+		<Style Selector=":is(TreeDataGridCell)">
+			<Setter Property="Padding" Value="0" />
+		</Style>
+
+		<Style Selector="TreeDataGridColumnHeader">
+			<Setter Property="FontSize" Value="{StaticResource FontSizeH7}" />
+			<Setter Property="FontWeight" Value="Bold" />
+			<Setter Property="Padding" Value="12 10 0 10" />
+		</Style>
+		<Style Selector="TreeDataGridColumnHeader /template/ Path#SortIcon">
+			<Setter Property="Margin" Value="4 0" />
+		</Style>
+
+        <Style Selector="TreeDataGridRow /template/ Rectangle#PART_BackgroundRectangle">
+            <Style.Resources>
+                <converters:IndentToBrushConverter x:Key="IndentToBrushConverter">
+                    <converters:IndentToBrushConverter.Brushes>
+                        <generic:List x:TypeArguments="IBrush">
+                            <SolidColorBrush>Transparent</SolidColorBrush>
+                            <SolidColorBrush Color="Green" />
+                        </generic:List>
+                    </converters:IndentToBrushConverter.Brushes>
+                </converters:IndentToBrushConverter>
+            </Style.Resources>
+            <Setter Property="Fill">
+                <Setter.Value>
+                    <MultiBinding Converter="{StaticResource IndentToBrushConverter}">
+                        <Binding Path="." />
+                        <Binding Path="$parent[TreeDataGridRow].Rows" />
+                    </MultiBinding>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+	</Window.Styles>
+
+	<Design.DataContext>
+		<viewModels:MainWindowViewModel/>
+	</Design.DataContext>
+
+	<DockPanel>
+		<TextBlock Margin="10" DockPanel.Dock="Top">Please, notice how the grid on the left will update normally, but the one on the right will never be expandable although their share the same data</TextBlock>
+		<Grid ColumnDefinitions="* *" Margin="20">
+			<StackPanel Spacing="10">
+				<TextBlock Foreground="Gray">With hasChildren=true</TextBlock>
+				<TreeDataGrid Source="{Binding Source1}" />
+			</StackPanel>
+			<StackPanel Grid.Column="1" Spacing="10">
+				<TextBlock Foreground="Gray">With hasChildren=children.Any()</TextBlock>
+				<TreeDataGrid Source="{Binding Source2}" />
+			</StackPanel>
+		</Grid>
+	</DockPanel>
+
+</Window>
